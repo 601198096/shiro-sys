@@ -87,6 +87,14 @@ public class ShiroConfigure {
 //        return ehCacheManager;
 //    }
 
+    /**
+     * description: redis缓存
+     * @param:
+    * @param redisTemplate
+     * @return {@link CacheManager}
+     * createdBy:ending
+     * created:2019/3/22
+     * */
     @Bean
     public CacheManager cacheManager(StringObjectRedisTemplate redisTemplate){
         return new RedisCacheManager(redisTemplate);
