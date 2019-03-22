@@ -3,8 +3,9 @@ package cn.shiro.sys.configure;
 import cn.hutool.core.codec.Base64;
 import cn.hutool.core.collection.CollUtil;
 import cn.shiro.sys.configure.realm.AccountAuthorizingRealm;
+import cn.shiro.sys.configure.redis.RedisCacheManager;
+import cn.shiro.sys.configure.redis.StringObjectRedisTemplate;
 import org.apache.shiro.cache.CacheManager;
-import org.apache.shiro.cache.ehcache.EhCacheManager;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.CookieRememberMeManager;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
@@ -71,19 +72,24 @@ public class ShiroConfigure {
         return accountAuthorizingRealm;
     }
 
-    /**
-     * description: 内存缓存
-     * @param:
-    * @param
-     * @return {@link CacheManager}
-     * createdBy:ending
-     * created:2019/3/21
-     * */
+//    /**
+//     * description: 内存缓存
+//     * @param:
+//    * @param
+//     * @return {@link CacheManager}
+//     * createdBy:ending
+//     * created:2019/3/21
+//     * */
+//    @Bean
+//    public CacheManager cacheManager(){
+//        EhCacheManager ehCacheManager = new EhCacheManager();
+//        ehCacheManager.setCacheManagerConfigFile("classpath:config/ehcache-shiro.xml");
+//        return ehCacheManager;
+//    }
+
     @Bean
-    public CacheManager cacheManager(){
-        EhCacheManager ehCacheManager = new EhCacheManager();
-        ehCacheManager.setCacheManagerConfigFile("classpath:config/ehcache-shiro.xml");
-        return ehCacheManager;
+    public CacheManager cacheManager(StringObjectRedisTemplate redisTemplate){
+        return new RedisCacheManager(redisTemplate);
     }
 
     @Bean
