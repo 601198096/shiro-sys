@@ -3,6 +3,8 @@ package cn.shiro.sys.configure;
 import cn.hutool.core.codec.Base64;
 import cn.hutool.core.collection.CollUtil;
 import cn.shiro.sys.configure.realm.AccountAuthorizingRealm;
+import org.apache.shiro.cache.CacheManager;
+import org.apache.shiro.cache.ehcache.EhCacheManager;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.CookieRememberMeManager;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
@@ -58,14 +60,39 @@ public class ShiroConfigure {
     @Bean
     public AccountAuthorizingRealm myAuthorizingRealm(){
         AccountAuthorizingRealm accountAuthorizingRealm = new AccountAuthorizingRealm();
+        //开启认证缓存
+        accountAuthorizingRealm.setAuthenticationCachingEnabled(true);
+        //名称对应ehcache-shiro.xml的名称
+        accountAuthorizingRealm.setAuthenticationCacheName("authenticationCache:");
+        //开启权限缓存
+        accountAuthorizingRealm.setAuthorizationCachingEnabled(true);
+        //名称对应ehcache-shiro.xml的名称
+        accountAuthorizingRealm.setAuthorizationCacheName("authorizationCache:");
         return accountAuthorizingRealm;
     }
 
+    /**
+     * description: 内存缓存
+     * @param:
+    * @param
+     * @return {@link CacheManager}
+     * createdBy:ending
+     * created:2019/3/21
+     * */
     @Bean
-    public DefaultWebSecurityManager defaultWebSecurityManager(CookieRememberMeManager cookieRememberMeManager){
+    public CacheManager cacheManager(){
+        EhCacheManager ehCacheManager = new EhCacheManager();
+        ehCacheManager.setCacheManagerConfigFile("classpath:config/ehcache-shiro.xml");
+        return ehCacheManager;
+    }
+
+    @Bean
+    public DefaultWebSecurityManager defaultWebSecurityManager(CookieRememberMeManager cookieRememberMeManager , CacheManager cacheManager){
         DefaultWebSecurityManager defaultWebSecurityManager = new DefaultWebSecurityManager();
         //设置cookie管理器
         defaultWebSecurityManager.setRememberMeManager(cookieRememberMeManager);
+        //设置缓存管理器
+        defaultWebSecurityManager.setCacheManager(cacheManager);
         defaultWebSecurityManager.setRealm(this.myAuthorizingRealm());
         return defaultWebSecurityManager;
     }

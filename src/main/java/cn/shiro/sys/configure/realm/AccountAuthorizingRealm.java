@@ -27,7 +27,7 @@ public class AccountAuthorizingRealm extends AuthorizingRealm {
      * @param:
     * @param principals
      * @return {@link AuthorizationInfo}
-     * createdBy:wanhao
+     * createdBy:ending
      * created:2019/3/21
      * */
     @Override
@@ -40,7 +40,7 @@ public class AccountAuthorizingRealm extends AuthorizingRealm {
      *
      * @param token
      * @return {@link AuthenticationInfo}
-     * createdBy:wanhao
+     * createdBy:ending
      * created:2019/3/21
      * @param:
      */
@@ -52,5 +52,38 @@ public class AccountAuthorizingRealm extends AuthorizingRealm {
             return new SimpleAuthenticationInfo(username , pwd , getName());
         }
         return null;
+    }
+
+    @Override
+    protected void clearCachedAuthorizationInfo(PrincipalCollection principals) {
+        super.clearCachedAuthorizationInfo(principals);
+    }
+
+    @Override
+    protected void doClearCache(PrincipalCollection principals) {
+        super.doClearCache(principals);
+    }
+
+    @Override
+    protected void clearCachedAuthenticationInfo(PrincipalCollection principals) {
+        super.clearCachedAuthenticationInfo(principals);
+    }
+
+    @Override
+    protected void clearCache(PrincipalCollection principals) {
+        super.clearCache(principals);
+    }
+
+    public void clearAllCachedAuthorizationInfo() {
+        getAuthorizationCache().clear();
+    }
+
+    public void clearAllCachedAuthenticationInfo() {
+        getAuthenticationCache().clear();
+    }
+
+    public void clearAllCached() {
+        this.clearAllCachedAuthorizationInfo();
+        this.clearAllCachedAuthenticationInfo();
     }
 }
