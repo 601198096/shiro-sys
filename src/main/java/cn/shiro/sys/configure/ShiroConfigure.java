@@ -6,11 +6,16 @@ import cn.shiro.sys.configure.realm.AccountAuthorizingRealm;
 import cn.shiro.sys.configure.redis.RedisCacheManager;
 import cn.shiro.sys.configure.redis.StringObjectRedisTemplate;
 import org.apache.shiro.cache.CacheManager;
+import org.apache.shiro.session.mgt.SessionManager;
+import org.apache.shiro.session.mgt.eis.EnterpriseCacheSessionDAO;
+import org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator;
+import org.apache.shiro.session.mgt.eis.SessionDAO;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.CookieRememberMeManager;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.servlet.Cookie;
 import org.apache.shiro.web.servlet.SimpleCookie;
+import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -100,13 +105,65 @@ public class ShiroConfigure {
         return new RedisCacheManager(redisTemplate);
     }
 
+    /**
+     * description: session管理器
+     * @param:
+    * @param
+     * @return {@link MySessionListener}
+     * createdBy:ending
+     * created:2019/3/25
+     * */
+    public MySessionListener mySessionListener(){
+        return new MySessionListener();
+    }
+    public SimpleCookie simpleCookieId(){
+        SimpleCookie simpleCookie = new SimpleCookie("sessionId");
+        simpleCookie.setHttpOnly(true);
+        simpleCookie.setMaxAge(1800);
+        return simpleCookie;
+    }
     @Bean
-    public DefaultWebSecurityManager defaultWebSecurityManager(CookieRememberMeManager cookieRememberMeManager , CacheManager cacheManager){
+    public SessionDAO sessionDAO(){
+        EnterpriseCacheSessionDAO enterpriseCacheSessionDAO = new EnterpriseCacheSessionDAO();
+        enterpriseCacheSessionDAO.setActiveSessionsCacheName("shiro-activeSessionCache:");
+        enterpriseCacheSessionDAO.setSessionIdGenerator(new JavaUuidSessionIdGenerator());
+        return enterpriseCacheSessionDAO;
+    }
+    @Bean
+    public SessionManager sessionManager(CacheManager cacheManager , SessionDAO sessionDAO){
+        DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
+        sessionManager.setSessionListeners(CollUtil.newArrayList(this.mySessionListener()));
+        sessionManager.setSessionIdCookie(this.simpleCookieId());
+        sessionManager.setCacheManager(cacheManager);
+        sessionManager.setSessionDAO(sessionDAO);
+        //取消url 后面的 JSESSIONID
+        sessionManager.setSessionIdUrlRewritingEnabled(false);
+
+        /*
+        * 下面目前只有使用内存缓存才有用，下次跟源码，使用内存缓存的时候记得将cacheName的':'去掉
+        * */
+        //全局会话超时时间（单位毫秒），默认30分钟  暂时设置为10秒钟 用来测试
+        sessionManager.setGlobalSessionTimeout(1000 * 30);
+        //是否开启删除无效的session对象  默认为true
+        sessionManager.setDeleteInvalidSessions(true);
+        //是否开启定时调度器进行检测过期session 默认为true
+        sessionManager.setSessionValidationSchedulerEnabled(true);
+        //设置session失效的扫描时间, 清理用户直接关闭浏览器造成的孤立会话 默认为 1个小时
+        //设置该属性 就不需要设置 ExecutorServiceSessionValidationScheduler 底层也是默认自动调用ExecutorServiceSessionValidationScheduler
+        //暂时设置为 5秒 用来测试
+        sessionManager.setSessionValidationInterval(5000);
+        return sessionManager;
+    }
+
+    @Bean
+    public DefaultWebSecurityManager defaultWebSecurityManager(CookieRememberMeManager cookieRememberMeManager , CacheManager cacheManager , SessionManager sessionManager){
         DefaultWebSecurityManager defaultWebSecurityManager = new DefaultWebSecurityManager();
         //设置cookie管理器
         defaultWebSecurityManager.setRememberMeManager(cookieRememberMeManager);
         //设置缓存管理器
         defaultWebSecurityManager.setCacheManager(cacheManager);
+        //session管理器
+        defaultWebSecurityManager.setSessionManager(sessionManager);
         defaultWebSecurityManager.setRealm(this.myAuthorizingRealm());
         return defaultWebSecurityManager;
     }
