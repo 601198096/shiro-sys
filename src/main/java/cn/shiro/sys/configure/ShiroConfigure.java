@@ -216,6 +216,7 @@ public class ShiroConfigure {
         //authc: 需要认证才能进行访问;
         //DefaultFilter枚举类能看到全部
         filterChainMap.put("/delete" , "sso,authc");//加上单点登录过滤
+        filterChainMap.put("/update" , "roles[1],perms[110]");
         filterChainMap.put("/add" , "user");
         filterChainMap.put("/get" , "anon");
         filterChainMap.put("/**" , "authc");
