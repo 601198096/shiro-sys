@@ -65,7 +65,7 @@ public class ShiroConfigure {
     }
 
     @Bean
-    public AccountAuthorizingRealm myAuthorizingRealm(){
+    public AccountAuthorizingRealm myAuthorizingRealm(CacheManager cacheManager){
         AccountAuthorizingRealm accountAuthorizingRealm = new AccountAuthorizingRealm();
         //开启认证缓存
         accountAuthorizingRealm.setAuthenticationCachingEnabled(true);
@@ -75,6 +75,8 @@ public class ShiroConfigure {
         accountAuthorizingRealm.setAuthorizationCachingEnabled(true);
         //名称对应ehcache-shiro.xml的名称
         accountAuthorizingRealm.setAuthorizationCacheName("authorizationCache:");
+        //添加自定义密码验证类并做失败统计拦截
+        accountAuthorizingRealm.setCredentialsMatcher(new MyCredentialsMatcher(cacheManager));
         return accountAuthorizingRealm;
     }
 
@@ -183,7 +185,7 @@ public class ShiroConfigure {
         defaultWebSecurityManager.setCacheManager(cacheManager);
         //session管理器
         defaultWebSecurityManager.setSessionManager(sessionManager);
-        defaultWebSecurityManager.setRealm(this.myAuthorizingRealm());
+        defaultWebSecurityManager.setRealm(this.myAuthorizingRealm(cacheManager));
         return defaultWebSecurityManager;
     }
 
