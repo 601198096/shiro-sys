@@ -4,7 +4,7 @@ import cn.hutool.core.util.ObjectUtil;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.LockedAccountException;
-import org.apache.shiro.authc.credential.SimpleCredentialsMatcher;
+import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheManager;
 
@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Description
  * @Date: Created in 14:39 2019/3/27
  */
-public class MyCredentialsMatcher extends SimpleCredentialsMatcher {
+public class MyCredentialsMatcher extends HashedCredentialsMatcher {
 
     private Cache<String , AtomicInteger> cache;
 

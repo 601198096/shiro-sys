@@ -6,6 +6,7 @@ import cn.shiro.sys.configure.realm.AccountAuthorizingRealm;
 import cn.shiro.sys.configure.redis.RedisCacheManager;
 import cn.shiro.sys.configure.redis.StringObjectRedisTemplate;
 import org.apache.shiro.cache.CacheManager;
+import org.apache.shiro.crypto.hash.Md5Hash;
 import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.session.mgt.eis.EnterpriseCacheSessionDAO;
 import org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator;
@@ -76,7 +77,14 @@ public class ShiroConfigure {
         //名称对应ehcache-shiro.xml的名称
         accountAuthorizingRealm.setAuthorizationCacheName("authorizationCache:");
         //添加自定义密码验证类并做失败统计拦截
-        accountAuthorizingRealm.setCredentialsMatcher(new MyCredentialsMatcher(cacheManager));
+        MyCredentialsMatcher myCredentialsMatcher = new MyCredentialsMatcher(cacheManager);
+        //加密算法
+        myCredentialsMatcher.setHashAlgorithmName(Md5Hash.ALGORITHM_NAME);
+        //加密次数
+        myCredentialsMatcher.setHashIterations(2);
+        //是否存储16进制
+        myCredentialsMatcher.setStoredCredentialsHexEncoded(true);
+        accountAuthorizingRealm.setCredentialsMatcher(myCredentialsMatcher);
         return accountAuthorizingRealm;
     }
 

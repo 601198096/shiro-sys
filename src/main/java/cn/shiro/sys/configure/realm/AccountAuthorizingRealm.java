@@ -1,6 +1,7 @@
 package cn.shiro.sys.configure.realm;
 
 import cn.hutool.core.util.StrUtil;
+import cn.shiro.sys.configure.MyByteSource;
 import cn.shiro.sys.service.LoginService;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -49,7 +50,7 @@ public class AccountAuthorizingRealm extends AuthorizingRealm {
         String username = token.getPrincipal().toString();
         String pwd = loginService.login(username);
         if(StrUtil.isNotBlank(pwd)){
-            return new SimpleAuthenticationInfo(username , pwd , getName());
+            return new SimpleAuthenticationInfo(username , pwd , new MyByteSource(username) , getName());
         }
         return null;
     }
