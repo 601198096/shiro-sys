@@ -19,6 +19,7 @@ import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import javax.servlet.Filter;
 import java.util.HashMap;
 
 /**
@@ -138,12 +139,12 @@ public class ShiroConfigure {
         sessionManager.setSessionDAO(sessionDAO);
         //取消url 后面的 JSESSIONID
         sessionManager.setSessionIdUrlRewritingEnabled(false);
+        //全局会话超时时间（单位毫秒），默认30分钟  暂时设置为10秒钟 用来测试
+        sessionManager.setGlobalSessionTimeout(60000 * 30);
 
         /*
         * 下面目前只有使用内存缓存才有用，下次跟源码，使用内存缓存的时候记得将cacheName的':'去掉
         * */
-        //全局会话超时时间（单位毫秒），默认30分钟  暂时设置为10秒钟 用来测试
-        sessionManager.setGlobalSessionTimeout(1000 * 30);
         //是否开启删除无效的session对象  默认为true
         sessionManager.setDeleteInvalidSessions(true);
         //是否开启定时调度器进行检测过期session 默认为true
@@ -153,6 +154,24 @@ public class ShiroConfigure {
         //暂时设置为 5秒 用来测试
         sessionManager.setSessionValidationInterval(5000);
         return sessionManager;
+    }
+
+    /**
+     * description: 单点登录过滤器
+     * @param:
+    * @param sessionManager
+    * @param cacheManager
+     * @return {@link SSOAccessControlFilter}
+     * createdBy:ending
+     * created:2019/3/26
+     * */
+    private SSOAccessControlFilter ssoAccessControlFilter(SessionManager sessionManager , CacheManager cacheManager){
+        SSOAccessControlFilter ssoAccessControlFilter = new SSOAccessControlFilter();
+        ssoAccessControlFilter.setCacheManager(cacheManager);
+        ssoAccessControlFilter.setSessionManager(sessionManager);
+        ssoAccessControlFilter.setMaxLoginNum(1);
+        ssoAccessControlFilter.setKickUrl("/403");
+        return ssoAccessControlFilter;
     }
 
     @Bean
@@ -176,12 +195,17 @@ public class ShiroConfigure {
         shiroFilterFactoryBean.setUnauthorizedUrl("/403");
         //登录页面
         shiroFilterFactoryBean.setLoginUrl("/login");
+        //注册过滤器
+        HashMap<String, Filter> filterHashMap = CollUtil.newHashMap();
+        filterHashMap.put("sso" , ssoAccessControlFilter(defaultWebSecurityManager.getSessionManager() , defaultWebSecurityManager.getCacheManager()));
+        shiroFilterFactoryBean.setFilters(filterHashMap);
+
         HashMap<String, String> filterChainMap = CollUtil.newHashMap();
         //user表示配置记住我或认证通过可以访问的地址
         //anon:所有url都都可以匿名访问;
         //authc: 需要认证才能进行访问;
         //DefaultFilter枚举类能看到全部
-        filterChainMap.put("/delete" , "user");
+        filterChainMap.put("/delete" , "sso,authc");//加上单点登录过滤
         filterChainMap.put("/add" , "user");
         filterChainMap.put("/get" , "anon");
         filterChainMap.put("/**" , "authc");
